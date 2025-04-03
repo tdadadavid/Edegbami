@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Create main directory structure
+mkdir -p src/api
+mkdir -p src/assets/styles
+mkdir -p src/components/auth
+mkdir -p src/components/dashboard
+mkdir -p src/components/layout
+mkdir -p src/contexts
+mkdir -p src/hooks
+mkdir -p src/pages
+
+# Create all the specified files
+touch src/api/index.js
+touch src/assets/styles/index.css
+
+# Components
+touch src/components/auth/LoginForm.jsx
+touch src/components/auth/SignupForm.jsx
+touch src/components/dashboard/Dashboard.jsx
+touch src/components/dashboard/CourseRegistration.jsx
+touch src/components/dashboard/Transcript.jsx
+touch src/components/dashboard/Profile.jsx
+touch src/components/layout/Navbar.jsx
+
+# Contexts
+touch src/contexts/AuthContext.jsx
+
+# Hooks
+touch src/hooks/useAuth.js
+
+# Pages
+touch src/pages/AuthPage.jsx
+touch src/pages/DashboardPage.jsx
+touch src/pages/CoursesPage.jsx
+touch src/pages/TranscriptPage.jsx
+touch src/pages/ProfilePage.jsx
+
+# Main app files
+touch src/App.jsx
+touch src/main.jsx
+
+# Configuration files in the root directory
+touch package.json
+touch vite.config.js
+touch tailwind.config.js
+touch postcss.config.js
+touch index.html
+touch .gitignore
+touch README.md
+
+echo "Folder structure and configuration files created successfully!"
