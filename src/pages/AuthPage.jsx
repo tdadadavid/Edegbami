@@ -1,40 +1,44 @@
 // src/pages/AuthPage.jsx
-import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import LoginForm from "../components/auth/LoginForm";
 import SignupForm from "../components/auth/SignupForm";
 import useAuth from "../hooks/useAuth";
 
 const AuthPage = () => {
-  const [mode, setMode] = useState("login");
-  const [signupSuccess, setSignupSuccess] = useState(false);
-  const { isAuthenticated, loading } = useAuth();
+	const [mode, setMode] = useState("login");
+	const [signupSuccess, setSignupSuccess] = useState(false);
+	const { isAuthenticated, loading } = useAuth();
+	const navigate = useNavigate();
 
-  // Display loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-500"></div>
-      </div>
-    );
-  }
+	// Redirect if already authenticated
+	useEffect(() => {
+		if (isAuthenticated && !loading) {
+			navigate("/dashboard", { replace: true });
+		}
+	}, [isAuthenticated, loading, navigate]);
 
-  // Only redirect when fully loaded and confirmed authenticated
-  if (!loading && isAuthenticated) {
-    console.log("Auth page: Already authenticated, redirecting to dashboard");
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  const toggleMode = () => {
+	// Toggle between login and signup modes
+	const toggleMode = () => {
 		setMode(mode === "login" ? "signup" : "login");
 		setSignupSuccess(false);
 	};
 
+	// Handle successful signup
 	const handleSignupSuccess = () => {
 		setSignupSuccess(true);
 		setMode("login");
 	};
+
+	// Display loading state
+	if (loading) {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-gray-100">
+				<div className="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-500"></div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">

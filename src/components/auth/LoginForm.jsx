@@ -1,5 +1,6 @@
 // src/components/auth/LoginForm.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 
@@ -8,17 +9,29 @@ const LoginForm = () => {
 	const [password, setPassword] = useState("");
 	const [loginError, setLoginError] = useState("");
 	const { login, loading } = useAuth();
+	const navigate = useNavigate();
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setLoginError("");
 
+		if (!email || !password) {
+			setLoginError("Email and password are required");
+			return;
+		}
+
 		try {
-			await login(email, password);
-			// Successful login will be handled by the auth context (redirect will happen)
+			console.log("Attempting login with:", email);
+			const success = await login(email, password);
+
+			if (success) {
+				console.log("Login successful, redirecting to dashboard");
+				navigate("/dashboard", { replace: true });
+			}
 		} catch (error) {
+			console.error("Login form error:", error);
 			setLoginError(
-				error.error || "Login failed. Please check your credentials."
+				error.message || "Login failed. Please check your credentials."
 			);
 		}
 	};
@@ -50,7 +63,7 @@ const LoginForm = () => {
 				</motion.div>
 			)}
 
-			<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+			<form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
 				<div className="rounded-md shadow-sm space-y-4">
 					<div>
 						<label htmlFor="email" className="sr-only">

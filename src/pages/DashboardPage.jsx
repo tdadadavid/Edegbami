@@ -1,11 +1,20 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+// src/pages/DashboardPage.jsx
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Dashboard from "../components/dashboard/Dashboard";
 import Navbar from "../components/layout/Navbar";
 import useAuth from "../hooks/useAuth";
 
 const DashboardPage = () => {
 	const { isAuthenticated, loading } = useAuth();
+	const navigate = useNavigate();
+
+	// Redirect to login if not authenticated
+	useEffect(() => {
+		if (!loading && !isAuthenticated) {
+			navigate("/auth", { replace: true });
+		}
+	}, [isAuthenticated, loading, navigate]);
 
 	// Show loading indicator
 	if (loading) {
@@ -16,10 +25,10 @@ const DashboardPage = () => {
 		);
 	}
 
-	// Only redirect when fully loaded and confirmed not authenticated
-	if (!loading && !isAuthenticated) {
-		console.log("Dashboard: Not authenticated, redirecting to auth");
-		return <Navigate to="/auth" replace />;
+	// If not authenticated, the useEffect will handle redirection
+	// If we're still here, we should be authenticated
+	if (!isAuthenticated) {
+		return null; // Return nothing while redirection happens
 	}
 
 	return (

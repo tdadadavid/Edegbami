@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { studentService } from "../../api";
+import useAuth from "../../hooks/useAuth";
 
 // Helper to determine grade color
 const getGradeColor = (grade) => {
@@ -18,8 +19,10 @@ const getGradeColor = (grade) => {
 };
 
 const Transcript = () => {
+	const { user } = useAuth();
 	const [cgpa, setCGPA] = useState(null);
-	const [grades, setGrades] = useState([]);
+	const [totalUnits, setTotalUnits] = useState(0);
+	const [registeredCourses, setRegisteredCourses] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [downloading, setDownloading] = useState(false);
@@ -33,65 +36,21 @@ const Transcript = () => {
 				// Fetch CGPA
 				const cgpaResponse = await studentService.getCGPA();
 				setCGPA(cgpaResponse.cgpa.toFixed(2));
+				setTotalUnits(cgpaResponse.totalUnits || 0);
 
-				// Mock data for grades (since we don't have an endpoint to fetch grades directly)
-				// In a real application, you would use an API endpoint to get this data
-				setGrades([
-					{
-						course_id: 1,
-						course_name: "Introduction to Computer Science",
-						code: "CSC101",
-						unit: 3,
-						grade: "A",
-						score: 89,
-						semester: "1st",
-					},
-					{
-						course_id: 2,
-						course_name: "Calculus I",
-						code: "MTH101",
-						unit: 4,
-						grade: "B",
-						score: 76,
-						semester: "1st",
-					},
-					{
-						course_id: 3,
-						course_name: "English Composition",
-						code: "ENG101",
-						unit: 2,
-						grade: "A",
-						score: 92,
-						semester: "1st",
-					},
-					{
-						course_id: 4,
-						course_name: "General Physics I",
-						code: "PHY101",
-						unit: 4,
-						grade: "C",
-						score: 68,
-						semester: "1st",
-					},
-					{
-						course_id: 5,
-						course_name: "Data Structures",
-						code: "CSC201",
-						unit: 3,
-						grade: "B",
-						score: 82,
-						semester: "2nd",
-					},
-					{
-						course_id: 6,
-						course_name: "Linear Algebra",
-						code: "MTH201",
-						unit: 3,
-						grade: "C",
-						score: 65,
-						semester: "2nd",
-					},
-				]);
+				// Fetch registered courses with grades
+				try {
+					const coursesResponse = await studentService.getRegisteredCourses();
+					// Combine compulsory and elective courses
+					const allCourses = [
+						...(coursesResponse.compulsory || []),
+						...(coursesResponse.electives || []),
+					];
+					setRegisteredCourses(allCourses);
+				} catch (err) {
+					console.error("Error fetching registered courses:", err);
+					setRegisteredCourses([]);
+				}
 			} catch (err) {
 				console.error("Error fetching transcript data:", err);
 				setError("Failed to load transcript data. Please try again later.");
@@ -116,12 +75,13 @@ const Transcript = () => {
 		}
 	};
 
-	// Group grades by semester
-	const groupedGrades = grades.reduce((acc, grade) => {
-		if (!acc[grade.semester]) {
-			acc[grade.semester] = [];
+	// Group courses by semester
+	const groupedCourses = registeredCourses.reduce((acc, course) => {
+		const semester = course.semester || "1st"; // Default to 1st if not specified
+		if (!acc[semester]) {
+			acc[semester] = [];
 		}
-		acc[grade.semester].push(grade);
+		acc[semester].push(course);
 		return acc;
 	}, {});
 
@@ -173,6 +133,7 @@ const Transcript = () => {
 					<div>
 						<h2 className="text-2xl font-bold text-gray-800">Current CGPA</h2>
 						<p className="text-gray-600">Your cumulative grade point average</p>
+						<p className="text-gray-600 mt-1">Total Units: {totalUnits}</p>
 					</div>
 					<div className="mt-4 md:mt-0">
 						<div
@@ -257,125 +218,104 @@ const Transcript = () => {
 				</div>
 			</motion.div>
 
-			{/* Grades by Semester */}
-			{Object.entries(groupedGrades).map(
-				([semester, semesterGrades], index) => (
-					<motion.div
-						key={semester}
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-						className="bg-white rounded-lg shadow-md mb-6 overflow-hidden"
-					>
-						<div
-							className={`p-4 ${
-								semester === "1st" ? "bg-green-50" : "bg-blue-50"
-							}`}
+			{/* Courses by Semester */}
+			{Object.entries(groupedCourses).length > 0 ? (
+				Object.entries(groupedCourses).map(
+					([semester, semesterCourses], index) => (
+						<motion.div
+							key={semester}
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
+							className="bg-white rounded-lg shadow-md mb-6 overflow-hidden"
 						>
-							<h3
-								className={`text-lg font-semibold ${
-									semester === "1st" ? "text-green-700" : "text-blue-700"
+							<div
+								className={`p-4 ${
+									semester === "1st" ? "bg-green-50" : "bg-blue-50"
 								}`}
 							>
-								{semester} Semester
-							</h3>
-						</div>
+								<h3
+									className={`text-lg font-semibold ${
+										semester === "1st" ? "text-green-700" : "text-blue-700"
+									}`}
+								>
+									{semester} Semester
+								</h3>
+							</div>
 
-						<div className="overflow-x-auto">
-							<table className="min-w-full divide-y divide-gray-200">
-								<thead className="bg-gray-50">
-									<tr>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Course Code
-										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Course Name
-										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Units
-										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Score
-										</th>
-										<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Grade
-										</th>
-									</tr>
-								</thead>
-								<tbody className="bg-white divide-y divide-gray-200">
-									{semesterGrades.map((grade) => (
-										<tr key={grade.course_id} className="hover:bg-gray-50">
-											<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
-												{grade.code}
-											</td>
-											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-												{grade.course_name}
-											</td>
-											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												{grade.unit}
-											</td>
-											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												{grade.score}
-											</td>
-											<td className="px-6 py-4 whitespace-nowrap">
-												<span
-													className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(
-														grade.grade
-													)}`}
-												>
-													{grade.grade}
-												</span>
-											</td>
+							<div className="overflow-x-auto">
+								<table className="min-w-full divide-y divide-gray-200">
+									<thead className="bg-gray-50">
+										<tr>
+											<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+												Course Code
+											</th>
+											<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+												Course Name
+											</th>
+											<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+												Units
+											</th>
+											<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+												Grade
+											</th>
+											<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+												Type
+											</th>
 										</tr>
-									))}
-								</tbody>
-
-								{/* Semester summary */}
-								<tfoot className="bg-gray-50">
-									<tr>
-										<td
-											colSpan="2"
-											className="px-6 py-3 text-right text-sm font-medium text-gray-500"
-										>
-											Semester Total:
-										</td>
-										<td className="px-6 py-3 text-sm font-medium text-gray-800">
-											{semesterGrades.reduce(
-												(sum, grade) => sum + grade.unit,
-												0
-											)}{" "}
-											Units
-										</td>
-										<td
-											colSpan="2"
-											className="px-6 py-3 text-sm font-medium text-gray-800"
-										>
-											{/* Semester GPA calculation */}
-											GPA:{" "}
-											{(
-												semesterGrades.reduce((sum, grade) => {
-													const gradePoints = {
-														A: 5,
-														B: 4,
-														C: 3,
-														D: 2,
-														E: 1,
-														F: 0,
-													};
-													return sum + gradePoints[grade.grade] * grade.unit;
-												}, 0) /
-												semesterGrades.reduce(
-													(sum, grade) => sum + grade.unit,
-													0
-												)
-											).toFixed(2)}
-										</td>
-									</tr>
-								</tfoot>
-							</table>
-						</div>
-					</motion.div>
+									</thead>
+									<tbody className="bg-white divide-y divide-gray-200">
+										{semesterCourses.map((course) => (
+											<tr key={course.course_id} className="hover:bg-gray-50">
+												<td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+													{course.code || "No Code"}
+												</td>
+												<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+													{course.name}
+												</td>
+												<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+													{course.unit}
+												</td>
+												<td className="px-6 py-4 whitespace-nowrap">
+													{course.grade ? (
+														<span
+															className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGradeColor(
+																course.grade
+															)}`}
+														>
+															{course.grade}
+														</span>
+													) : (
+														<span className="text-gray-400 text-sm">
+															No grade yet
+														</span>
+													)}
+												</td>
+												<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+													{course.mode === "COMPULSORY" ? (
+														<span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+															Compulsory
+														</span>
+													) : (
+														<span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+															Elective
+														</span>
+													)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</motion.div>
+					)
 				)
+			) : (
+				<div className="bg-white rounded-lg shadow-md p-8 text-center">
+					<p className="text-gray-600">
+						No course registrations found. Please register for courses first.
+					</p>
+				</div>
 			)}
 
 			{/* Grade Key */}
@@ -388,42 +328,42 @@ const Transcript = () => {
 				<h3 className="text-lg font-semibold text-gray-800 mb-4">
 					Grading System
 				</h3>
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+				<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 mr-2 font-bold">
 							A
 						</span>
-						<span className="text-sm">70-100 (5 points)</span>
+						<span className="text-sm">5 points</span>
 					</div>
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-2 font-bold">
 							B
 						</span>
-						<span className="text-sm">60-69 (4 points)</span>
+						<span className="text-sm">4 points</span>
 					</div>
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 mr-2 font-bold">
 							C
 						</span>
-						<span className="text-sm">50-59 (3 points)</span>
+						<span className="text-sm">3 points</span>
 					</div>
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-500 mr-2 font-bold">
 							D
 						</span>
-						<span className="text-sm">45-49 (2 points)</span>
+						<span className="text-sm">2 points</span>
 					</div>
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-500 mr-2 font-bold">
 							E
 						</span>
-						<span className="text-sm">40-44 (1 point)</span>
+						<span className="text-sm">1 point</span>
 					</div>
 					<div className="flex items-center">
 						<span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 mr-2 font-bold">
 							F
 						</span>
-						<span className="text-sm">0-39 (0 points)</span>
+						<span className="text-sm">0 points</span>
 					</div>
 				</div>
 			</motion.div>

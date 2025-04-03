@@ -79,11 +79,15 @@ const Dashboard = () => {
 			try {
 				setLoading(true);
 				// Fetch CGPA
-				const cgpaResponse = await studentService.getCGPA();
-        setCGPA(cgpaResponse.cgpa.toFixed(2));
+				try {
+					const cgpaResponse = await studentService.getCGPA();
+					setCGPA(cgpaResponse.cgpa ? cgpaResponse.cgpa.toFixed(2) : "N/A");
+				} catch (err) {
+					console.error("Error fetching CGPA:", err);
+					setCGPA("N/A");
+				}
 
-				// Here we'd normally fetch registered courses, but API doesn't have that endpoint
-				// Using mock data for display purposes
+				// Mock registered courses
 				setRegisteredCourses([
 					{ id: 1, code: "CSC101", name: "Introduction to Computer Science" },
 					{ id: 2, code: "MTH101", name: "Calculus I" },
@@ -109,17 +113,7 @@ const Dashboard = () => {
 		);
 	}
 
-	if (error) {
-		return (
-			<div
-				className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4"
-				role="alert"
-			>
-				<p className="font-bold">Error</p>
-				<p>{error}</p>
-			</div>
-		);
-	}
+	const firstName = user?.firstname || user?.first_name || "Student";
 
 	return (
 		<div className="p-6">
@@ -131,13 +125,23 @@ const Dashboard = () => {
 				className="mb-8"
 			>
 				<h1 className="text-3xl font-bold text-gray-800">
-					Welcome back, {user?.firstname || "Student"}!
+					Welcome back, {firstName}!
 				</h1>
 				<p className="text-gray-600 mt-1">
 					Here's an overview of your academic progress and quick access to
 					important features.
 				</p>
 			</motion.div>
+
+			{error && (
+				<div
+					className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded my-4"
+					role="alert"
+				>
+					<p className="font-bold">Error</p>
+					<p>{error}</p>
+				</div>
+			)}
 
 			{/* Stats row */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -187,7 +191,7 @@ const Dashboard = () => {
 				/>
 				<StatCard
 					title="Department"
-					value={`Dept ${user?.department_id || "N/A"}`}
+					value={user?.department_id || "N/A"}
 					icon={
 						<svg
 							className="w-6 h-6"

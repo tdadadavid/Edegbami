@@ -1,30 +1,32 @@
-// src/contexts/ThemeContext.jsx
 import React, { createContext, useState, useEffect } from "react";
 
-export const ThemeContext = createContext();
+export const ThemeContext = createContext({
+	theme: "light",
+	toggleTheme: () => {},
+});
 
 export const ThemeProvider = ({ children }) => {
-	// Get the preferred theme from localStorage or system preference
-	const getPreferredTheme = () => {
+	const [theme, setTheme] = useState(() => {
+		// First, check localStorage
 		const savedTheme = localStorage.getItem("theme");
 		if (savedTheme) return savedTheme;
 
-		// Use system preference as default
+		// If no saved preference, check system preference
 		return window.matchMedia("(prefers-color-scheme: dark)").matches
 			? "dark"
-			: "dark";
-	};
+			: "light";
+	});
 
-	const [theme, setTheme] = useState(() => getPreferredTheme());
-
-	// Apply theme class to document
 	useEffect(() => {
 		const root = window.document.documentElement;
 
+		// Remove both classes
 		root.classList.remove("light", "dark");
+
+		// Add the current theme class
 		root.classList.add(theme);
 
-		// Store theme preference
+		// Save to localStorage
 		localStorage.setItem("theme", theme);
 	}, [theme]);
 
@@ -32,9 +34,10 @@ export const ThemeProvider = ({ children }) => {
 	useEffect(() => {
 		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-		const handleChange = () => {
+		const handleChange = (e) => {
+			// Only change if no explicit theme is set by user
 			if (!localStorage.getItem("theme")) {
-				setTheme(mediaQuery.matches ? "dark" : "dark");
+				setTheme(e.matches ? "dark" : "light");
 			}
 		};
 
@@ -43,7 +46,7 @@ export const ThemeProvider = ({ children }) => {
 	}, []);
 
 	const toggleTheme = () => {
-		setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "dark"));
+		setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
 	};
 
 	return (

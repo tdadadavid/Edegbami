@@ -8,36 +8,56 @@ export default {
 				sans: ["Inter", "system-ui", "sans-serif"],
 			},
 			colors: {
-				// Vercel-inspired color palette (minimal black & white with accents)
-				vercel: {
-					50: "#fafafa",
-					100: "#eaeaea",
-					200: "#999999",
-					300: "#888888",
-					400: "#666666",
-					500: "#444444",
-					600: "#333333",
-					700: "#222222",
-					800: "#111111",
-					900: "#000000",
+				// Vercel-inspired minimal color palette
+				background: {
+					light: "#ffffff",
+					dark: "#0a0a0a",
 				},
-				accent: {
+				foreground: {
 					light: "#000000",
 					dark: "#ffffff",
 				},
+				border: {
+					light: "#eaeaea",
+					dark: "#333333",
+				},
+				vercel: {
+					gray: {
+						50: "#fafafa",
+						100: "#f5f5f5",
+						200: "#e5e5e5",
+						300: "#d4d4d4",
+						400: "#a3a3a3",
+						500: "#737373",
+						600: "#525252",
+						700: "#404040",
+						800: "#262626",
+						900: "#171717",
+					},
+					blue: {
+						50: "#eff6ff",
+						100: "#dbeafe",
+						200: "#bfdbfe",
+						300: "#93c5fd",
+						400: "#60a5fa",
+						500: "#3b82f6",
+						600: "#2563eb",
+						700: "#1d4ed8",
+						800: "#1e40af",
+						900: "#1e3a8a",
+					},
+				},
 			},
 			boxShadow: {
-				vercel: "0 2px 10px rgba(0, 0, 0, 0.05)",
-				"vercel-dark": "0 2px 10px rgba(0, 0, 0, 0.2)",
+				soft: "0 2px 10px rgba(0, 0, 0, 0.05)",
+				"soft-dark": "0 2px 10px rgba(255, 255, 255, 0.05)",
+			},
+			borderRadius: {
+				"4xl": "2rem",
 			},
 			animation: {
-				"fade-in": "fadeIn 0.5s ease-in-out",
-				"slide-up": "slideInUp 0.5s ease-out",
-				"slow-pulse": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-			},
-			transitionProperty: {
-				height: "height",
-				spacing: "margin, padding",
+				"fade-in": "fadeIn 0.3s ease-in-out",
+				"slide-up": "slideInUp 0.3s ease-out",
 			},
 		},
 	},
